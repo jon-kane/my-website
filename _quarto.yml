@@ -8,6 +8,7 @@ website:
   site-url: "https://jon-kane.github.io/justan3ngin33r"
   favicon: "images/logo_gray.png"
   navbar:
+    logo: "images/logo.png"
     left:
       - href: index.qmd
         text: home

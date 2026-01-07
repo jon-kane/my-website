@@ -95,3 +95,15 @@ a:hover {
     text-transform: lowercase; /* Matches your 'toc' preference */
 }
 
+/* Disable the hyperlink on the navbar logo and title */
+.navbar-brand {
+    pointer-events: none;    /* Prevents clicking, hovering, and cursor changes */
+    cursor: default;         /* Ensures the pointer doesn't change to a hand */
+    text-decoration: none;   /* Removes any default link underlining */
+}
+
+/* Ensure the color stays consistent since it's technically still an <a> tag */
+.navbar-brand, .navbar-brand:hover {
+    color: inherit !important; 
+    opacity: 1 !important;
+}
