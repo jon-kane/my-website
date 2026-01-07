@@ -71,3 +71,27 @@ a:hover {
 .navbar a {
   border-bottom: none;
 }
+
+/* Change the color of all TOC links */
+#TOC .nav-link {
+    color: #ffa500 !important;
+}
+
+/* Ensure the 'active' link (the one currently in view) is also orange */
+#TOC .nav-link.active {
+    color: #ffa500 !important;
+    border-left: 2px solid #ffa500 !important;
+}
+
+/* Hover state for TOC links */
+#TOC .nav-link:hover {
+    opacity: 0.8;
+}
+
+/* Optional: change the TOC title "toc" color specifically */
+#quarto-sidebar-toc-header {
+    color: #ffa500;
+    font-weight: bold;
+    text-transform: lowercase; /* Matches your 'toc' preference */
+}
+
