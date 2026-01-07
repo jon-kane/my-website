@@ -6,6 +6,7 @@ execute:
 
 website:
   site-url: "https://jon-kane.github.io/justan3ngin33r/"
+  favicon: "images/logo.png"
   navbar:
     left:
       - href: index.qmd
