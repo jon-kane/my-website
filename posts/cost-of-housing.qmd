@@ -7,23 +7,150 @@ date: last-modified
 date-format: long
 ---
 
+```{r setup}
+#| include: false
+
+source(here::here("_common.R"))
+library(tidyquant)
+
+# all the data wrangling and modeling done upfront to reference values:
+
+# ------------------------------------------------------------------------------
+# national data
+
+national_data = readRDS(here::here("posts/COST_OF_HOUSING/national-data.rds"))
+attach(national_data)
+
+cpi_baseline = tb_nm %>% 
+  filter(symbol == "CPIAUCSL", year(date) == 2025, month(date) == 1) %>% 
+  pull(price)
+
+tb_final01 = tb_nm %>% # national data structured
+  mutate(
+    symbol = case_match(
+      symbol,
+      "CPIAUCSL"      ~ "cpi",
+      "MSPUS"         ~ "home",
+      "MORTGAGE30US"  ~ "rate",
+      "MEHOINUSA646N" ~ "income"
+  )) %>% 
+  select(-price_raw) %>% 
+  pivot_wider(
+    names_from = symbol,
+    values_from = c(price, pred_sd),
+    names_glue = "{symbol}_{.value}"
+  ) %>% 
+  mutate(
+    inflation_adj = cpi_price / cpi_baseline,
+    # Real Home Price (2025 Dollars)
+    home_real = home_price / inflation_adj,
+    # Error Prop: SD_z = z * sqrt((SD_x/x)^2 + (SD_y/y)^2)
+    home_real_sd = home_real * sqrt((home_pred_sd/home_price)^2 + (cpi_pred_sd/cpi_price)^2),
+    home_real_l = home_real - 3 * home_real_sd,
+    home_real_u = home_real + 3 * home_real_sd,
+    # Real Income (2025 Dollars)
+    income_real = income_price / inflation_adj,
+    income_real_sd = income_real * sqrt((income_pred_sd/income_price)^2 + (cpi_pred_sd/cpi_price)^2),
+    income_real_l = income_real - 3 * income_real_sd,
+    income_real_u = income_real + 3 * income_real_sd
+  ) %>% 
+  mutate(
+    # Mortgage Payment Logic
+    r_monthly = (rate_price / 100) / 12,
+    n_payments = 360,
+    factor = (r_monthly * (1 + r_monthly)^n_payments) / ((1 + r_monthly)^n_payments - 1),
+    payment = (0.8 * home_real) * factor,
+    # Payment SD scales linearly with Home SD (assuming rate error is negligible/zero)
+    payment_sd = (0.8 * home_real_sd) * factor,
+    payment_l = payment - 3 * payment_sd,
+    payment_u = payment + 3 * payment_sd
+  ) %>% 
+  mutate(
+    # Mortgage Payment / Monthly Income
+    dti_ratio = payment / (income_real / 12),
+    dti_sd = dti_ratio * sqrt((payment_sd/payment)^2 + (income_real_sd/income_real)^2),
+    dti_l = dti_ratio - 3 * dti_sd,
+    dti_u = dti_ratio + 3 * dti_sd,
+    # Home Price / Annual Income
+    pi_ratio = home_price / income_price,
+    pi_sd = pi_ratio * sqrt((home_pred_sd/home_price)^2 + (income_pred_sd/income_price)^2),
+    pi_l = pi_ratio - 3 * pi_sd,
+    pi_u = pi_ratio + 3 * pi_sd
+  )
+
+# model of price/income ratio
+lm_pir = lm(
+  pi_ratio ~ date,
+  data = tb_final01
+)
+
+tb_lm_pir = lm_pir$model %>% 
+  bind_cols(
+    predict(lm_pir, ., se.fit = T) %>% 
+      magrittr::extract(c("fit", "se.fit")) %>% 
+      as_tibble()
+  ) %>% 
+  mutate(fit_upper = fit + 3*se.fit) %>% 
+  mutate(fit_lower = fit - 3*se.fit)
+
+get_pi_percentile = ecdf(tb_lm_pir$pi_ratio)
+
+# Use it on any value
+pi_target_percentile = get_pi_percentile(last(tb_lm_pir$pi_ratio))
+
+# model of debt-to-income ratio for monthly mortgage
+lm_dti = lm(
+  dti_ratio ~ date,
+  data = tb_final01
+)
+
+tb_lm_dti = lm_dti$model %>% 
+  bind_cols(
+    predict(lm_dti, ., se.fit = T) %>% 
+      magrittr::extract(c("fit", "se.fit")) %>% 
+      as_tibble()
+  ) %>% 
+  mutate(fit_upper = fit + 3*se.fit) %>% 
+  mutate(fit_lower = fit - 3*se.fit)
+
+get_dti_percentile = ecdf(tb_lm_dti$dti_ratio)
+
+# Use it on any value
+dti_target_percentile = get_dti_percentile(last(tb_lm_dti$dti_ratio))
+```
+
 ::: {.callout-warning}
 ## Work in Progress
 I am actively updating this post. Content may change frequently as work my way through this article.
 :::
 
-I want to look at...
+# tl;dr
 
-- The proportion of a person's monthly income that would be dedicated to their monthly mortgage (30-year).
-- The (total cost of a house)/(annual income)
+**Things are bad, but not as bad as you might think.**
 
-I want to examine this info over time and look at it from a...
+Nationally,
 
-- National level
-- State level
-- County level
+- From `r format(min(tb_lm_pir$date), '%B %Y')` to `r format(max(tb_lm_pir$date), '%B %Y')`, the price-to-income ratio of a home has **increased by `r round(coef(lm_pir)[2] * 365, 3)` per year on average**. As of `r format(max(tb_lm_pir$date), '%B %Y')`, the ratio stands at `r round(last(tb_lm_pir$pi_ratio), 2)`^[Meaning the typical house costs the typical household `r round(last(tb_lm_pir$pi_ratio), 2)` $\times$ their gross annual income], placing it in the **`r scales::ordinal(pi_target_percentile * 100)` percentile of all observations** in this period.
+- From `r format(min(tb_lm_dti$date), '%B %Y')`^[Freddie Mac began surveying lenders on mortgage rates in April 1971, making this the earliest date for which consistent, nationwide data is available.] to `r format(max(tb_lm_dti$date), '%B %Y')`, the mortgage debt-to-income ratio has **decreased by `r round(coef(lm_dti)[2] * 365, 3)` per year on average**. As of `r format(max(tb_lm_dti$date), '%B %Y')`, the ratio stands at `r round(last(tb_lm_dti$dti_ratio), 2)`^[Meaning the *typical* household would spend `r round(last(tb_lm_dti$dti_ratio), 2)` $\times$ their monthly income on their mortgage. this calculation assumes only interest and principal.], placing it in the **`r scales::ordinal(dti_target_percentile * 100)` percentile of all observations** in this period.
 
-# nationally 
+# intro
+
+Much has been written recently on housing affordability, with much of it being negative^[Here's a few: [CBS](https://www.cbsnews.com/news/affordable-housing-home-prices-bankrate/), [NBC](https://www.nbcnews.com/business/real-estate/exactly-unaffordable-todays-housing-market-s-getting-worse-rcna207007), and [FOX](https://www.foxbusiness.com/lifestyle/only-28-us-homes-now-affordable-typical-american-household-buying-power-drops)]. Aside from the [tendency of news organizations to produce negative content](https://hai.stanford.edu/news/the-data-behind-your-doom-scroll-how-negative-news-takes-over-your-feed), I think what is lost in these reports is historical context: where were we, and where are we now? Even when the historical context is present, metrics may be used that, if not interpreted carefully, can be misleading. 
+
+For instance, [longtermtrends.com](https://www.longtermtrends.com/home-price-median-annual-income-ratio/) gives a chart that shows the ratio of the [S&P/Case-Shiller Home Price Index](https://www.spglobal.com/spdji/en/indices/indicators/sp-cotality-case-shiller-us-national-home-price-nsa-index/#overview) to the median household income. The problem here is that the Case-Shiller index is a weighted average; the distribution of home values tend to be right skewed, so an average will be greater than the median (the *typical* house). This results in a price-to-income ratio that is a bit more pessimistic. The typical person is buying the typical house, not the average house.
+
+In order to provide some clarity on the questions of housing affordability, I'm going to look at two metrics:
+
+1. The ratio of the typical cost of a house to the typical household income.
+2. The proportion of a person's monthly income that would be dedicated to their monthly mortgage.
+
+I'm *planning* to examine this at three different geographic scales:
+
+- National
+- State
+- County
+
+# national
 
 The data we are using from the [FRED](https://fred.stlouisfed.org/):
 
@@ -32,15 +159,7 @@ The data we are using from the [FRED](https://fred.stlouisfed.org/):
 - *MORTGAGE30US*: 30-Year Fixed Rate Mortgage Average in the United States
 - *MEHOINUSA646N*: Median Household Income in the United States
 
-```{r setup}
-#| include: false
 
-source(here::here("_common.R"))
-library(tidyquant)
-
-national_data = readRDS(here::here("posts/COST_OF_HOUSING/national-data.rds"))
-attach(national_data)
-```
 
 A first look at the data:
 
@@ -85,10 +204,10 @@ tb_nm %>%
 ```{r}
 tb_nm %>% 
   ggplot(aes(x = date)) +
-  geom_ribbon(aes(ymin = price - 2*pred_sd, ymax = price + 2*pred_sd), alpha = 0.2, color = NA, fill = "gray") +
+  geom_ribbon(aes(ymin = price - 3*pred_sd, ymax = price + 3*pred_sd), alpha = 0.2, color = NA, fill = "gray") +
   geom_line(aes(y = price)) +
   facet_wrap(~symbol, scales = "free_y") +
-  labs(title = expression("monthly forecasts with 2" * sigma * " prediction intervals"),
+  labs(title = expression("monthly forecasts with 3" * sigma * " prediction intervals"),
        subtitle = "mixed-frequency inputs harmonized to monthly",
        y = "predicted value", x = "date")
 ```
@@ -114,30 +233,81 @@ s = tb1 %>%
   slice(1) %>% # January 2025
   pull(cpi)
 
-tb_msia = tb1 %>% 
-  left_join(tb2, by = "date") %>% 
-  mutate(i25 = cpi / s) %>% 
-  mutate(ia2025_price = price / i25) %>% 
+tb_msia = tb1 %>%
+  left_join(tb2, by = "date") %>%
+  mutate(i25 = cpi / s) %>%
+  mutate(ia2025_price = price / i25) %>%
   # calculate the propagated standard error (quadrature)
-  mutate(combined_sd = ia2025_price * sqrt((ms_sd / price)^2 + (cpi_sd / cpi)^2)) %>% 
+  mutate(combined_sd = ia2025_price * sqrt((ms_sd / price)^2 + (cpi_sd / cpi)^2)) %>%
   # apply 2-sigma to the resulting combined distribution
-  mutate(ia2025_price_l = ia2025_price - 2 * combined_sd) %>% 
-  mutate(ia2025_price_u = ia2025_price + 2 * combined_sd) %>% 
-  select(date, i25, price, cpi, ms_sd, cpi_sd, ia2025_price:ia2025_price_u) %>% 
+  mutate(ia2025_price_l = ia2025_price - 3 * combined_sd) %>%
+  mutate(ia2025_price_u = ia2025_price + 3 * combined_sd) %>%
+  select(date, i25, price, cpi, ms_sd, cpi_sd, ia2025_price:ia2025_price_u) %>%
   relocate(date, combined_sd)
 
-tb_msia %>% 
-  ggplot(aes(date, ia2025_price)) + 
-  geom_ribbon(aes(ymin = ia2025_price_l, ymax = ia2025_price_u), alpha = 0.4, color = NA, fill = "gray") + 
+tb_final01 %>% 
+  ggplot(aes(date, home_real)) + 
+  geom_ribbon(aes(ymin = home_real_l, ymax = home_real_u), alpha = 0.4, color = NA, fill = "gray") + 
   geom_line() + 
   labs(
     x = "",
     y = "",
     title = "inflation adjusted median sales price of a home (2025 dollars)",
-    subtitle = expression("monthly forecasts with 2" * sigma * " prediction intervals")
+    subtitle = expression("monthly forecasts with 3" * sigma * " prediction intervals")
   ) + 
   scale_y_continuous(labels = scales::dollar)
 ```
+
+What is the linear trend in the inflation adjusted median sales price of a home? Let's exclude the forecast data:
+
+```{r}
+lm_msia = lm(
+  ia2025_price ~ date,
+  data = tb_msia %>% filter(combined_sd == 0)
+)
+
+lm_msia %>% summary()
+
+tb_lm = lm_msia$model %>%
+  bind_cols(
+    predict(lm_msia, ., se.fit = T) %>%
+      magrittr::extract(c("fit", "se.fit")) %>%
+      as_tibble()
+  ) %>%
+  mutate(fit_upper = fit + 3*se.fit) %>%
+  mutate(fit_lower = fit - 3*se.fit)
+
+tb_msia %>%
+  ggplot(aes(date, ia2025_price)) +
+  geom_ribbon(
+    aes(ymin = ia2025_price_l, ymax = ia2025_price_u),
+    alpha = 0.4,
+    color = NA,
+    fill = "gray"
+    ) +
+  geom_line() +
+  geom_line(
+    data = tb_lm,
+    aes(y = fit),
+    color = "#ffa500"
+    ) +
+  geom_ribbon(
+    data = tb_lm,
+    aes(ymin = fit_lower, ymax = fit_upper),
+    alpha = 0.4,
+    color = NA,
+    fill = "#ffa500"
+    ) +
+  labs(
+    x = "",
+    y = "",
+    title = "inflation adjusted median sales price of a home (2025 dollars)",
+    subtitle = expression("monthly forecasts with 3" * sigma * " prediction intervals")
+  ) +
+  scale_y_continuous(labels = scales::dollar)
+```
+
+From the above model, we find that real median sales price (2025 dollars) of a home has increased by `r scales::dollar(lm_msia$coefficients[2]*365)` a year on average from `r format(min(tb_lm$date), "%B, %Y")` to `r format(max(tb_lm$date), "%B, %Y")`.
 
 For the monthly mortgage payment (30-year mortgage), we'll assume a 20% down payment so the mortgage will 80% of the home value:
 
@@ -159,6 +329,7 @@ tb_msia_mr = tb_msia %>%
   select(-c(r_monthly, n_payments))
 
 tb_msia_mr %>% 
+  drop_na() %>% 
   ggplot(aes(date, payment)) + 
   geom_ribbon(aes(ymin = payment_l, ymax = payment_u), alpha = 0.4, color = NA, fill = "gray") + 
   geom_line() + 
@@ -166,7 +337,7 @@ tb_msia_mr %>%
     x = "",
     y = "",
     title = "median monthly mortgage payment (2025 dollars)",
-    subtitle = expression("monthly forecasts with 2" * sigma * " prediction intervals")
+    subtitle = expression("monthly forecasts with 3" * sigma * " prediction intervals")
   ) + 
   scale_y_continuous(labels = scales::dollar)
 ```
@@ -185,20 +356,20 @@ tb_final = tb_msia_mr %>%
   ) %>% 
   mutate(ia2025_income = income / i25) %>% 
   mutate(income_real_sd = ia2025_income * sqrt((income_sd / income)^2 + (cpi_sd / cpi)^2)) %>% 
-  mutate(ia2025_income_l = ia2025_income - 2 * income_real_sd) %>% 
-  mutate(ia2025_income_u = ia2025_income + 2 * income_real_sd) %>% 
+  mutate(ia2025_income_l = ia2025_income - 3 * income_real_sd) %>% 
+  mutate(ia2025_income_u = ia2025_income + 3 * income_real_sd) %>% 
   mutate(ia2025_income_m = ia2025_income / 12) %>% 
   mutate(ratio = payment / ia2025_income_m) %>% 
   mutate(ratio_sd = ratio * sqrt((ms_sd / price)^2 + (income_sd / income)^2)) %>% 
-  mutate(ratio_l = ratio - 2 * ratio_sd) %>% 
-  mutate(ratio_u = ratio + 2 * ratio_sd) %>% 
+  mutate(ratio_l = ratio - 3 * ratio_sd) %>% 
+  mutate(ratio_u = ratio + 3 * ratio_sd) %>% 
   mutate(price_income_ratio = price / income) %>% 
   # Calculate propagated standard deviation (Quadrature)
   # Combining relative errors of Home Price and Income
   mutate(pi_ratio_sd = price_income_ratio * sqrt((ms_sd / price)^2 + (income_sd / income)^2)) %>% 
   # Apply 2-sigma bounds
-  mutate(pi_ratio_l = price_income_ratio - 2 * pi_ratio_sd) %>% 
-  mutate(pi_ratio_u = price_income_ratio + 2 * pi_ratio_sd)
+  mutate(pi_ratio_l = price_income_ratio - 3 * pi_ratio_sd) %>% 
+  mutate(pi_ratio_u = price_income_ratio + 3 * pi_ratio_sd)
 
 tb_final %>% 
   ggplot(aes(date, ia2025_income)) + 
@@ -208,11 +379,12 @@ tb_final %>%
     x = "",
     y = "",
     title = "median household income (2025 dollars)",
-    subtitle = expression("monthly forecasts with 2" * sigma * " prediction intervals")
+    subtitle = expression("monthly forecasts with 3" * sigma * " prediction intervals")
   ) + 
   scale_y_continuous(labels = scales::dollar)
 
 tb_final %>% 
+  drop_na() %>% 
   ggplot(aes(date, ratio)) + 
   geom_ribbon(aes(ymin = ratio_l, ymax = ratio_u), alpha = 0.4, color = NA, fill = "gray") + 
   geom_line() + 
@@ -220,10 +392,12 @@ tb_final %>%
     x = "",
     y = "",
     title = "percent of monthly gross income servicing mortgage",
-    subtitle = expression("monthly forecasts with 2" * sigma * " prediction intervals")
+    subtitle = expression("monthly forecasts with 3" * sigma * " prediction intervals")
   ) + 
   scale_y_continuous(labels = scales::percent)
 ```
+
+
 
 Lastly, let's look at the total cost of a house divided by the annual income:
 
@@ -236,8 +410,59 @@ tb_final %>%
     x = "",
     y = "",
     title = "price/income ratio",
-    subtitle = expression("monthly forecasts with 2" * sigma * " prediction intervals")
+    subtitle = expression("monthly forecasts with 3" * sigma * " prediction intervals")
   )
 ```
+
+Let's build a model of the price/income ratio:
+
+```{r}
+lm_pir = lm(
+  price_income_ratio ~ date,
+  data = tb_final %>% filter(combined_sd == 0) # don't include forecasts
+)
+
+lm_pir %>% summary()
+
+tb_lm_pir = lm_pir$model %>% 
+  bind_cols(
+    predict(lm_pir, ., se.fit = T) %>% 
+      magrittr::extract(c("fit", "se.fit")) %>% 
+      as_tibble()
+  ) %>% 
+  mutate(fit_upper = fit + 3*se.fit) %>% 
+  mutate(fit_lower = fit - 3*se.fit)
+
+tb_final %>% 
+  ggplot(aes(date, price_income_ratio)) + 
+  geom_ribbon(aes(ymin = pi_ratio_l, ymax = pi_ratio_u), alpha = 0.4, color = NA, fill = "gray") + 
+  geom_line() + 
+  labs(
+    x = "",
+    y = "",
+    title = "price/income ratio",
+    subtitle = expression("monthly forecasts with 3" * sigma * " prediction intervals")
+  ) + 
+  geom_line(
+    data = tb_lm_pir,
+    aes(y = fit),
+    color = "#ffa500"
+    ) + 
+  geom_ribbon(
+    data = tb_lm_pir,
+    aes(ymin = fit_lower, ymax = fit_upper), 
+    alpha = 0.4, 
+    color = NA, 
+    fill = "#ffa500"
+    ) +
+  labs(
+    x = "",
+    y = "",
+    title = "price/income ratio",
+    subtitle = expression("monthly forecasts with 3" * sigma * " prediction intervals")
+  )
+```
+
+From the above model, we find that the ratio of the typical cost of a house to the typical household income has increased by `r round(lm_pir$coefficients[2]*365, 2)` a year on average from `r format(min(tb_lm_pir$date), "%B, %Y")` to `r format(max(tb_lm_pir$date), "%B, %Y")`.
 
 This [website](https://www.longtermtrends.com/home-price-median-annual-income-ratio/) provides a good visual, tracking the change over a longer period of time. However, they use the Case-Shiller index which gives the average home price and divide that by the median. This gives a more pessimistic view of the cost of housing than is actual.
