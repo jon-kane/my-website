@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="dcterms.date" content="2026-01-08">
+<meta name="description" content="cost of housing in the US over time">
 
-<title>home</title>
+<title>how expensive is housing?</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,25 +25,25 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./images/logo_gray.png" rel="icon" type="image/png">
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-707d8167ce6003fca903bfe2be84ab7f.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-5111478a3e739f981a6638106c7172e1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../images/logo_gray.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-707d8167ce6003fca903bfe2be84ab7f.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-5111478a3e739f981a6638106c7172e1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -70,8 +72,37 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<link rel="stylesheet" href="styles.css">
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed quarto-light">
@@ -82,8 +113,8 @@ ul.task-list li input[type="checkbox"] {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="https://buymeacoffee.com/justan3ngin33r" class="navbar-brand navbar-brand-logo">
-    <img src="./images/logo.png" alt="" class="navbar-logo light-content">
-    <img src="./images/logo.png" alt="" class="navbar-logo dark-content">
+    <img src="../../images/logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../images/logo.png" alt="" class="navbar-logo dark-content">
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -93,11 +124,11 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./writings.html"> 
+    <a class="nav-link" href="../../writings.html"> 
 <span class="menu-text">writings</span></a>
   </li>  
 </ul>
@@ -111,22 +142,50 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">on this page</h2>
+   
+  <ul>
+  <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">tl;dr</a></li>
+  <li><a href="#intro" id="toc-intro" class="nav-link" data-scroll-target="#intro">intro</a></li>
+  <li><a href="#analysis" id="toc-analysis" class="nav-link" data-scroll-target="#analysis">analysis</a>
+  <ul class="collapse">
+  <li><a href="#national-scale" id="toc-national-scale" class="nav-link" data-scroll-target="#national-scale">national scale</a></li>
+  <li><a href="#state-scale" id="toc-state-scale" class="nav-link" data-scroll-target="#state-scale">state scale</a></li>
+  <li><a href="#county-scale" id="toc-county-scale" class="nav-link" data-scroll-target="#county-scale">county scale</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-code-links"><h2>get the code</h2><ul><li><a href="https://github.com/jon-kane/justan3ngin33r/tree/main/posts/COST_OF_HOUSING"><i class="bi bi-github"></i>repository</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content column-page" id="quarto-document-content">
+<main class="content page-columns page-full column-page-left" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">home</h1>
+<h1 class="title">how expensive is housing?</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">economics</div>
+    <div class="quarto-category">housing</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    cost of housing in the US over time
+  </div>
 </div>
 
 
-
-<div class="quarto-title-meta column-page">
+<div class="quarto-title-meta column-page-left">
 
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 8, 2026</p>
+    </div>
+  </div>
   
     
   </div>
@@ -136,57 +195,229 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<style>
-/* 1. Hide the default Quarto title header */
-#title-block-header {
-  display: none;
-}
-
-/* 2. Remove Quarto's default container padding */
-#quarto-content, main {
-  padding-bottom: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-.sticky-container {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: -1;
-  margin-bottom: -100vh;
-}
-
-.content-wrapper {
-  position: relative;
-  z-index: 1;
-  padding-top: 0; 
-  padding-bottom: 0; /* Removed the 50vh gap */
-  background: rgba(255, 255, 255, 0);
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow: hidden; /* Core fix: disables the scrollbar */
-  background-color: #000;
-}
-</style>
-<div class="sticky-container">
-<iframe src="collatz_visual.html" width="100%" height="100%" style="border:none;">
-</iframe>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div class="text-block">
-<p>I have a noisy brain. I’m also forgetful. In an attempt to organize that noise, and to help me remember things, I’ve started this website to share things that I find interesting.</p>
-<p>Most musings will probably have a data science flavor, though I make no promises. This website is powered by coffee, so if you find any of this helpful and would like to support my work, consider <a href="https://buymeacoffee.com/justan3ngin33r">buying me a coffee</a>.</p>
-<p>The animation on this page is of the <a href="https://en.wikipedia.org/wiki/Collatz_conjecture">collatz conjecture</a> and was inspired by <a href="https://commons.wikimedia.org/wiki/File:Collatz_conjecture_tree_visualization.png#/media/File:Collatz_conjecture_tree_visualization.png">this visual</a>.</p>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Work in Progress
 </div>
+</div>
+<div class="callout-body-container callout-body">
+<p>I am actively updating this post. Content may change frequently as I work my way through this article.</p>
+</div>
+</div>
+<section id="tldr" class="level1 page-columns page-full">
+<h1>tl;dr</h1>
+<p><strong>Things are bad, but not as bad as you might think.</strong></p>
+<p>Nationally,</p>
+<ul>
+<li>From January 1963 to January 2026, the price-to-income ratio of a home has <strong>increased by 0.04 per year on average</strong>. As of January 2026, the ratio stands at 4.52<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, placing it in the <strong>70th percentile of all observations</strong> in this period.</li>
+<li>From April 1971<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> to January 2026, the mortgage debt-to-income ratio has <strong>decreased by -0.001 per year on average</strong>. As of January 2026, the ratio stands at 0.27<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, placing it in the <strong>47th percentile of all observations</strong> in this period.</li>
+</ul>
+<div class="no-row-height column-margin column-container"><div id="fn1"><p><sup>1</sup>&nbsp;Meaning the typical house costs the typical household 4.52 <span class="math inline">\(\times\)</span> their gross annual income</p></div><div id="fn2"><p><sup>2</sup>&nbsp;Freddie Mac began surveying lenders on mortgage rates in April 1971, making this the earliest date for which consistent, nationwide data is available.</p></div><div id="fn3"><p><sup>3</sup>&nbsp;Meaning the <em>typical</em> household would spend 0.27 <span class="math inline">\(\times\)</span> their monthly income on their mortgage. this calculation assumes only interest and principal.</p></div></div></section>
+<section id="intro" class="level1 page-columns page-full">
+<h1>intro</h1>
+<p>Much has been written recently on housing affordability, with much of it being negative<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. Aside from the <a href="https://hai.stanford.edu/news/the-data-behind-your-doom-scroll-how-negative-news-takes-over-your-feed">tendency of news organizations to produce negative content</a>, I think what is lost in these reports is historical context: where were we, and where are we now? Even when the historical context is present, metrics may be used that, if not interpreted carefully, can be misleading.</p>
+<div class="no-row-height column-margin column-container"><div id="fn4"><p><sup>4</sup>&nbsp;Here’s a few: <a href="https://www.cbsnews.com/news/affordable-housing-home-prices-bankrate/">CBS</a>, <a href="https://www.nbcnews.com/business/real-estate/exactly-unaffordable-todays-housing-market-s-getting-worse-rcna207007">NBC</a>, and <a href="https://www.foxbusiness.com/lifestyle/only-28-us-homes-now-affordable-typical-american-household-buying-power-drops">FOX</a></p></div></div><p>For instance, <a href="https://www.longtermtrends.com/home-price-median-annual-income-ratio/">longtermtrends.com</a> gives a chart that shows the ratio of the <a href="https://www.spglobal.com/spdji/en/indices/indicators/sp-cotality-case-shiller-us-national-home-price-nsa-index/#overview">S&amp;P/Case-Shiller Home Price Index</a> to the median household income. The problem here is that the Case-Shiller index is a weighted average; the distribution of home values tend to be right skewed, so an average will be greater than the median (the <em>typical</em> house). This results in a price-to-income ratio that is a bit more pessimistic. The typical person is buying the typical house, not the average house.</p>
+<p>In order to provide some clarity on the questions of housing affordability, I’m going to look at two metrics:</p>
+<ol type="1">
+<li>The ratio of the typical cost of a house to the typical household income.</li>
+<li>The proportion of a person’s monthly income that would be dedicated to their monthly mortgage.</li>
+</ol>
+<p>I’m <em>planning</em> to examine this at three different geographic scales:</p>
+<ul>
+<li>National</li>
+<li>State</li>
+<li>County</li>
+</ul>
+</section>
+<section id="analysis" class="level1 page-columns page-full">
+<h1>analysis</h1>
+<section id="national-scale" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="national-scale">national scale</h2>
+<p>The data we are using from the <a href="https://fred.stlouisfed.org/">FRED</a>:</p>
+<ul>
+<li><em>CPIAUCSL</em>: Consumer Price Index for All Urban Consumers: All Items in U.S. City Average</li>
+<li><em>MSPUS</em>: Median Sales Price of Houses Sold for the United States</li>
+<li><em>MORTGAGE30US</em>: 30-Year Fixed Rate Mortgage Average in the United States</li>
+<li><em>MEHOINUSA646N</em>: Median Household Income in the United States</li>
+</ul>
+<p>A first look at the data:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>What I need to do:</p>
+<ul>
+<li>Put the data in the same time frequency (use time series models)
+<ul>
+<li>CPIAUCSL: monthly</li>
+<li>MEHOINUSA646N: annual</li>
+<li>MORTGAGE30US: weekly</li>
+<li>MSPUS: quarterly</li>
+</ul></li>
+<li>Forecast some series to match the most recent data point available. Account for uncertainty.</li>
+</ul>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 3
+  symbol        min_date   max_date  
+  &lt;chr&gt;         &lt;date&gt;     &lt;date&gt;    
+1 CPIAUCSL      1947-01-01 2025-11-01
+2 MEHOINUSA646N 1947-01-01 2024-01-01
+3 MORTGAGE30US  1971-04-02 2026-01-08
+4 MSPUS         1963-01-01 2025-04-01</code></pre>
+</div>
+</div>
+<p>A look at the modeled data. Converted to a monthly frequency.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> Range examined from the max-min date (January, 1963) of the different series to the max date (January, 2026) of all the series.</p>
+<div class="no-row-height column-margin column-container"><div id="fn5"><p><sup>5</sup>&nbsp;Weekly frequency has been averaged. Annual and quarterly frequency linearly interpolated. No error estimates included in averaged/interpolated points.</p></div></div><div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 3
+  symbol        min_date   max_date  
+  &lt;chr&gt;         &lt;date&gt;     &lt;date&gt;    
+1 CPIAUCSL      1963-01-01 2026-01-01
+2 MEHOINUSA646N 1963-01-01 2026-01-01
+3 MORTGAGE30US  1971-04-01 2026-01-01
+4 MSPUS         1963-01-01 2026-01-01</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now, to build out the metrics:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>What is the linear trend in the inflation adjusted median sales price of a home? Let’s exclude the forecast data:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = ia2025_price ~ date, data = tb_msia %&gt;% filter(combined_sd == 
+    0))
 
+Residuals:
+   Min     1Q Median     3Q    Max 
+-51402 -19898   1452  16631  64136 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 2.104e+05  1.440e+03  146.13   &lt;2e-16 ***
+date        1.060e+01  1.310e-01   80.93   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 23550 on 746 degrees of freedom
+Multiple R-squared:  0.8977,    Adjusted R-squared:  0.8976 
+F-statistic:  6549 on 1 and 746 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>From the above model, we find that real median sales price (2025 dollars) of a home has increased by $3,869.32 a year on average from January, 1963 to April, 2025.</p>
+<p>For the monthly mortgage payment (30-year mortgage), we’ll assume a 20% down payment so the mortgage will 80% of the home value:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now, let’s get the percentage of a person’s gross income that would go to their mortgage:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-8-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Lastly, let’s look at the total cost of a house divided by the annual income:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Let’s build a model of the price/income ratio:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = price_income_ratio ~ date, data = tb_final %&gt;% filter(combined_sd == 
+    0))
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.64244 -0.19255 -0.01162  0.18200  0.58437 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 3.016e+00  1.495e-02  201.72   &lt;2e-16 ***
+date        1.132e-04  1.360e-06   83.19   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.2445 on 746 degrees of freedom
+Multiple R-squared:  0.9027,    Adjusted R-squared:  0.9026 
+F-statistic:  6921 on 1 and 746 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cost-of-housing_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>From the above model, we find that the ratio of the typical cost of a house to the typical household income has increased by 0.04 a year on average from January, 1963 to April, 2025.</p>
+</section>
+<section id="state-scale" class="level2">
+<h2 class="anchored" data-anchor-id="state-scale">state scale</h2>
+</section>
+<section id="county-scale" class="level2">
+<h2 class="anchored" data-anchor-id="county-scale">county scale</h2>
+
+
+</section>
+</section>
 
 
 </main> <!-- /main -->
