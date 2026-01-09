@@ -82,8 +82,8 @@ ul.task-list li input[type="checkbox"] {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="https://buymeacoffee.com/justan3ngin33r" class="navbar-brand navbar-brand-logo">
-    <img src="./images/logo.png" alt="" class="navbar-logo light-content">
-    <img src="./images/logo.png" alt="" class="navbar-logo dark-content">
+    <img src="./images/logo_cropped.png" alt="" class="navbar-logo light-content">
+    <img src="./images/logo_cropped.png" alt="" class="navbar-logo dark-content">
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -108,14 +108,14 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
         
     </div>
 <!-- main -->
-<main class="content column-page" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
@@ -124,7 +124,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<div class="quarto-title-meta column-page">
+<div class="quarto-title-meta">
 
     
   
@@ -142,38 +142,64 @@ ul.task-list li input[type="checkbox"] {
   display: none;
 }
 
-/* 2. Remove Quarto's default container padding */
-#quarto-content, main {
-  padding-bottom: 0 !important;
-  margin-bottom: 0 !important;
+/* 2. Force all Quarto layout containers to be transparent */
+/* Added .quarto-container to this list */
+#quarto-content, 
+#quarto-margin-sidebar, 
+.page-columns, 
+.quarto-container,
+main {
+  background: transparent !important;
 }
 
-.sticky-container {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: -1;
-  margin-bottom: -100vh;
+/* Define the Fade In Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px); /* Starts slightly lower */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.content-wrapper {
-  position: relative;
+.text-block {
+  position: relative; 
   z-index: 1;
-  padding-top: 0; 
-  padding-bottom: 0; /* Removed the 50vh gap */
-  background: rgba(255, 255, 255, 0);
+  /* Apply the animation */
+  opacity: 0; /* Start invisible so it doesn't flash before fading in */
+  animation: fadeInUp 1.5s ease-out forwards; 
+  animation-delay: 0.5s; /* Optional: Wait 0.5s before starting */
 }
+
+/* 3. Bring the sticky container forward, but ignore mouse clicks */
+.sticky-container {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;  /* CHANGED: Brought up from -1 to 0 so it sits on the canvas */
+  pointer-events: none; /* NEW: Ensures clicks pass through to links/text */
+  margin-bottom: 0; 
+}
+
+/* 4. Ensure the text sits ON TOP of the animation */
+.text-block {
+  position: relative; /* NEW: Required for z-index to work */
+  z-index: 1;         /* NEW: Puts text above the z-index: 0 animation */
+}
+
+/* Note: You had a .content-wrapper class defined but not used in your HTML. 
+   I applied the necessary logic to .text-block above instead. */
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Core fix: disables the scrollbar */
+  overflow-y: auto; /* Changed to auto so you can scroll if text gets long */
   background-color: #000;
 }
 </style>
@@ -183,7 +209,7 @@ html, body {
 </div>
 <div class="text-block">
 <p>I have a noisy brain. I’m also forgetful. In an attempt to organize that noise, and to help me remember things, I’ve started this website to share things that I find interesting.</p>
-<p>Most musings will probably have a data science flavor, though I make no promises. This website is powered by coffee, so if you find any of this helpful and would like to support my work, consider <a href="https://buymeacoffee.com/justan3ngin33r">buying me a coffee</a>.</p>
+<p>Most writings will have a data science flavor, though I make no promises. This website is powered by coffee, so if you find any of this helpful and would like to support my work, consider <a href="https://buymeacoffee.com/justan3ngin33r">buying me a coffee</a>.</p>
 <p>The animation on this page is of the <a href="https://en.wikipedia.org/wiki/Collatz_conjecture">collatz conjecture</a> and was inspired by <a href="https://commons.wikimedia.org/wiki/File:Collatz_conjecture_tree_visualization.png#/media/File:Collatz_conjecture_tree_visualization.png">this visual</a>.</p>
 </div>
 

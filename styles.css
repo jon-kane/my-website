@@ -72,9 +72,23 @@ a:hover {
   border-bottom: none;
 }
 
-/* Change the color of all TOC links */
+/* Define an explicit height for the navbar */
+ .navbar {
+    height: 60px; /* Or use vh units like 10vh */
+}
+
+/* Now the percentage height for the logo will work */
+.navbar-brand img {
+    height: 50px;  /* Fills 90% of the 80px navbar */
+    width: auto;   /* Keeps the image from stretching */
+}
+
+/* --- Table of Contents (TOC) Styles --- */
+
+/* 1. Default State: Gray50 */
 #TOC .nav-link {
-    color: #ffa500 !important;
+    color: #7F7F7F !important; 
+    transition: color 0.2s ease-in-out;
 }
 
 /* Ensure the 'active' link (the one currently in view) is also orange */
@@ -83,9 +97,34 @@ a:hover {
     border-left: 2px solid #ffa500 !important;
 }
 
-/* Hover state for TOC links */
+/* 2. Hover State: Orange */
 #TOC .nav-link:hover {
-    opacity: 0.8;
+    color: #ffa500 !important;
+    opacity: 1; /* Ensures it's fully visible */
+}
+
+/* --- Code Links (Get the Code) Styling --- */
+
+/* 1. Link Text - Default State */
+/* We use #TOC to make this rule stronger than the theme defaults */
+#TOC .quarto-code-links a {
+    color: #7F7F7F !important; /* Gray50 to match TOC items */
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s ease-in-out;
+}
+
+/* 2. Link Text - Hover State */
+/* This forces the Orange color on hover */
+#TOC .quarto-code-links a:hover {
+    color: #ffa500 !important;
+    border-bottom: 1px solid #ffa500 !important;
+}
+
+/* 3. Icon Coloring */
+/* Ensures the GitHub icon changes color along with the text */
+#TOC .quarto-code-links a i {
+    color: inherit !important;
 }
 
 /* Optional: change the TOC title "toc" color specifically */
@@ -95,15 +134,29 @@ a:hover {
     text-transform: lowercase; /* Matches your 'toc' preference */
 }
 
-/* Disable the hyperlink on the navbar logo and title */
-/* .navbar-brand {
-    pointer-events: none;    /* Prevents clicking, hovering, and cursor changes */
-/*     cursor: default;         /* Ensures the pointer doesn't change to a hand */
-/*     text-decoration: none;   /* Removes any default link underlining */
-/* }
+/* --- Custom Callout/Warning Banner Styling --- */
 
-/* Ensure the color stays consistent since it's technically still an <a> tag */
-/* .navbar-brand, .navbar-brand:hover {
-    color: inherit !important; 
-    opacity: 1 !important;
+/* 1. Main Container: Dark background with Orange Left Border */
+.callout-warning {
+    background-color: #1a1a1a !important; /* Matches your post background */
+    border: 1px solid #333 !important;    /* Subtle outer border */
+    border-left: 5px solid #ffa500 !important; /* Signature Orange Accent */
+    border-radius: 4px;
+}
+
+/* 2. Header: Remove default fill, make text Orange */
+.callout-warning .callout-header {
+    background-color: transparent !important;
+    color: #ffa500 !important;
+    border-bottom: 1px solid rgba(255, 165, 0, 0.2); /* Subtle divider */
+}
+
+/* 3. Icon: Force Orange */
+.callout-warning .callout-icon {
+    color: #ffa500 !important; 
+}
+
+/* 4. Body: Ensure text is readable (Gray/White) */
+.callout-warning .callout-body {
+    color: #d3d3d3 !important;
 }
