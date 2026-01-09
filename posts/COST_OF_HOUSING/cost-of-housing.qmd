@@ -16,6 +16,10 @@ code-links:
 
 source(here::here("_common.R"))
 library(tidyquant)
+library(ggiraph)
+library(patchwork)
+library(scales)
+library(knitr)
 
 # all the data wrangling and modeling done upfront to reference values:
 
@@ -83,24 +87,24 @@ tb_final01 = tb_nm %>% # national data structured
   )
 
 # model of price/income ratio
-lm_pir = lm(
+lm_pi = lm(
   pi_ratio ~ date,
   data = tb_final01
 )
 
-tb_lm_pir = lm_pir$model %>% 
+tb_lm_pi = lm_pi$model %>% 
   bind_cols(
-    predict(lm_pir, ., se.fit = T) %>% 
+    predict(lm_pi, ., se.fit = T) %>% 
       magrittr::extract(c("fit", "se.fit")) %>% 
       as_tibble()
   ) %>% 
   mutate(fit_upper = fit + 3*se.fit) %>% 
   mutate(fit_lower = fit - 3*se.fit)
 
-get_pi_percentile = ecdf(tb_lm_pir$pi_ratio)
+get_pi_percentile = ecdf(tb_lm_pi$pi_ratio)
 
 # Use it on any value
-pi_target_percentile = get_pi_percentile(last(tb_lm_pir$pi_ratio))
+pi_target_percentile = get_pi_percentile(last(tb_lm_pi$pi_ratio))
 
 # model of debt-to-income ratio for monthly mortgage
 lm_dti = lm(
@@ -125,100 +129,567 @@ dti_target_percentile = get_dti_percentile(last(tb_lm_dti$dti_ratio))
 
 ::: {.callout-warning}
 ## Work in Progress
-I am actively updating this post. Content may change frequently as I work my way through this article.
+I am actively updating this post. Content will change as I work my way through this article.
 :::
 
 # tl;dr
 
 **Things are bad, but not as bad as you might think.**
 
-Nationally,
+At a national scale,
 
-- From `r format(min(tb_lm_pir$date), '%B %Y')` to `r format(max(tb_lm_pir$date), '%B %Y')`, the price-to-income ratio of a home has **increased by `r round(coef(lm_pir)[2] * 365, 3)` per year on average**. As of `r format(max(tb_lm_pir$date), '%B %Y')`, the ratio stands at `r round(last(tb_lm_pir$pi_ratio), 2)`^[Meaning the typical house costs the typical household `r round(last(tb_lm_pir$pi_ratio), 2)` $\times$ their gross annual income], placing it in the **`r scales::ordinal(pi_target_percentile * 100)` percentile of all observations** in this period.
-- From `r format(min(tb_lm_dti$date), '%B %Y')`^[Freddie Mac began surveying lenders on mortgage rates in April 1971, making this the earliest date for which consistent, nationwide data is available.] to `r format(max(tb_lm_dti$date), '%B %Y')`, the mortgage debt-to-income ratio has **decreased by `r round(coef(lm_dti)[2] * 365, 3)` per year on average**. As of `r format(max(tb_lm_dti$date), '%B %Y')`, the ratio stands at `r round(last(tb_lm_dti$dti_ratio), 2)`^[Meaning the *typical* household would spend `r round(last(tb_lm_dti$dti_ratio), 2)` $\times$ their monthly income on their mortgage. this calculation assumes only interest and principal.], placing it in the **`r scales::ordinal(dti_target_percentile * 100)` percentile of all observations** in this period.
+- From `r format(min(tb_lm_pi$date), '%B %Y')` to `r format(max(tb_lm_pi$date), '%B %Y')`, the price-to-income ratio of a home has **increased by `r round(coef(lm_pi)[2] * 365*100, 3)` percentage points (pp) per year on average**. As of `r format(max(tb_lm_pi$date), '%B %Y')`, the ratio stands at `r round(last(tb_lm_pi$pi_ratio), 2)`^[Meaning the typical house costs the typical household `r round(last(tb_lm_pi$pi_ratio), 2)` $\times$ their gross annual income], placing it in the **`r scales::ordinal(pi_target_percentile * 100)` percentile of all observations** in this period.
+- From `r format(min(tb_lm_dti$date), '%B %Y')` to `r format(max(tb_lm_dti$date), '%B %Y')`, the mortgage debt-to-income ratio has **decreased by `r round(coef(lm_dti)[2] * 365, 3)` pp per year on average**. As of `r format(max(tb_lm_dti$date), '%B %Y')`, the ratio stands at `r round(last(tb_lm_dti$dti_ratio), 2)`^[Meaning the typical household would spend `r round(last(tb_lm_dti$dti_ratio), 2)` $\times$ their monthly income on the typical mortgage. This calculation assumes only interest and principal.], placing it in the **`r scales::ordinal(dti_target_percentile * 100)` percentile of all observations** in this period.
 
 # intro
 
-Much has been written recently on housing affordability, with much of it being negative^[Here's a few: [CBS](https://www.cbsnews.com/news/affordable-housing-home-prices-bankrate/), [NBC](https://www.nbcnews.com/business/real-estate/exactly-unaffordable-todays-housing-market-s-getting-worse-rcna207007), and [FOX](https://www.foxbusiness.com/lifestyle/only-28-us-homes-now-affordable-typical-american-household-buying-power-drops)]. Aside from the [tendency of news organizations to produce negative content](https://hai.stanford.edu/news/the-data-behind-your-doom-scroll-how-negative-news-takes-over-your-feed), I think what is lost in these reports is historical context: where were we, and where are we now? Even when the historical context is present, metrics may be used that, if not interpreted carefully, can be misleading. 
+Much has been written recently on housing affordability, with much of it being negative.^[Here's a few: [CBS](https://www.cbsnews.com/news/affordable-housing-home-prices-bankrate/), [NBC](https://www.nbcnews.com/business/real-estate/exactly-unaffordable-todays-housing-market-s-getting-worse-rcna207007), and [FOX](https://www.foxbusiness.com/lifestyle/only-28-us-homes-now-affordable-typical-american-household-buying-power-drops)] Aside from the [tendency of news organizations to produce negative content](https://hai.stanford.edu/news/the-data-behind-your-doom-scroll-how-negative-news-takes-over-your-feed), I think what is lost in these reports is historical context: where were we, and where are we now? Even when the historical context is present, metrics may be used that, if not interpreted carefully, can be misleading. 
 
-For instance, [longtermtrends.com](https://www.longtermtrends.com/home-price-median-annual-income-ratio/) gives a chart that shows the ratio of the [S&P/Case-Shiller Home Price Index](https://www.spglobal.com/spdji/en/indices/indicators/sp-cotality-case-shiller-us-national-home-price-nsa-index/#overview) to the median household income. The problem here is that the Case-Shiller index is a weighted average; the distribution of home values tend to be right skewed, so an average will be greater than the median (the *typical* house). This results in a price-to-income ratio that is a bit more pessimistic. The typical person is buying the typical house, not the average house.
+For instance, [longtermtrends.com](https://www.longtermtrends.com/home-price-median-annual-income-ratio/) gives a chart that shows the ratio of the [S&P/Case-Shiller Home Price Index](https://www.spglobal.com/spdji/en/indices/indicators/sp-cotality-case-shiller-us-national-home-price-nsa-index/#overview) to the median household income. This index is used a lot since it's high-quality and has data that dates back to 1890. However, the problem here is that the Case-Shiller index is a weighted average. The distribution of home values tend to be right skewed, so an average will be greater than the median (the *typical* house). So, dividing the average by the median produces a price-to-income ratio that is a bit more pessimistic. *The typical person is buying the typical house, not the average house.*
 
-In order to provide some clarity on the questions of housing affordability, I'm going to look at two metrics:
+In order to provide some clarity on the question of housing affordability, I'm going to look at two metrics:
 
-1. The ratio of the typical cost of a house to the typical household income.
-2. The proportion of a person's monthly income that would be dedicated to their monthly mortgage.
-
-I'm *planning* to examine this at three different geographic scales:
-
-- National
-- State
-- County
+1. The ratio of the typical cost of a house to the typical household income. In this article, I'll refer to it as the *price-to-income ratio*.
+2. The proportion of a person's monthly income that would be dedicated to their monthly mortgage. For my analysis, this will be limited to only interest and principal^[I'm interested in having a better picture of this by incorporating property taxes and home insurance costs if someone could get me the data...], and will assume a 20% downpayment, so a loan on 80% the value of a house. I'll refer to it as the *debt-to-income ratio* in the article.
 
 # analysis
 
+I'm *planning* to examine this at three different geographic scales:
+
+- national
+- state
+- county
+
 ## national scale
 
-The data we are using from the [FRED](https://fred.stlouisfed.org/):
+### the data
 
-- *CPIAUCSL*: Consumer Price Index for All Urban Consumers: All Items in U.S. City Average
-- *MSPUS*: Median Sales Price of Houses Sold for the United States
-- *MORTGAGE30US*: 30-Year Fixed Rate Mortgage Average in the United States
-- *MEHOINUSA646N*: Median Household Income in the United States
+The data I'm using is mostly from the [FRED](https://fred.stlouisfed.org/). I've supplemented some of these series with data extending further back to get a more complete picture. Below are the data series and where I got the supplemental data:
 
+- [CPIAUCSL](https://fred.stlouisfed.org/series/CPIAUCSL): Consumer Price Index for All Urban Consumers: All Items in U.S. City Average
+- [MEHOINUSA646N](https://fred.stlouisfed.org/series/MEHOINUSA646N): Median Household Income in the United States
+  - Years 1947-1965 are from [p.877 of a US Census Bureau publication](https://www2.census.gov/library/publications/1999/compendia/statab/119ed/tables/sec31.pdf).
+  - Years 1967-1983 are also from the [US Census Bureau](https://www2.census.gov/programs-surveys/demo/tables/p60/276/tableD1.xlsx)
+- [MORTGAGE30US](https://fred.stlouisfed.org/series/MORTGAGE30US): 30-Year Fixed Rate Mortgage Average^[Unfortunately, there is no high-frequency median equivalent to this data that I know of. Fortunately, there are some restrictive filters (e.g. 20% down, excellent credit, excluding jumbo loans) on which data to use that removes large outliers making the mean more centered. See [here](https://www.freddiemac.com/pmms#faqs) for more details] in the United States
+- [MSPUS](https://fred.stlouisfed.org/series/MSPUS): Median Sales Price of Houses Sold for the United States
+  - Years 1953-1962 are from few different indices^[The [NAR Median Sales Price of Existing Homes](http://www.realtor.org/topics/existing-home-sales), [Shiller's NSA Home Sale Index](http://www.econ.yale.edu/~shiller/data.htm), and the [FHFA's NSA Existing Home Sale Index](https://www.fhfa.gov/DataTools/Downloads/Pages/House-Price-Index.aspx)] that have been combined. The author explains the process [here](https://dqydj.com/historical-home-prices/).
 
-
-A first look at the data:
+Let's take a look at the data below:
 
 ```{r}
-tb_n %>% 
-    ggplot(aes(date, price)) +
-    facet_wrap(~symbol, scales = "free_y") + 
-    geom_line()
+#| label: fig-national-indicators
+#| fig-cap: "National housing and economic indicators over time. Dollars are in nominal terms. Hover over the lines to see specific values."
+#| column: body
+#| out-width: "100%"
+
+tb_viz = tb_n %>%
+  drop_na() %>%
+  mutate(
+    clean_name = case_match(
+      symbol,
+      "MSPUS"         ~ "median home price",
+      "MEHOINUSA646N" ~ "median household income",
+      "MORTGAGE30US"  ~ "30-year fixed mortgage rate",
+      "CPIAUCSL"      ~ "consumer price index (cpi)",
+      .default = symbol
+    )
+  )
+
+# 2. Define a function to generate individual plots
+createInteractivePlot = function(data, symbol_code, plot_color, y_label_fn) {
+  
+  # Filter for the specific series
+  plot_data = data %>% 
+    filter(symbol == symbol_code)
+  
+  # Get the clean title
+  plot_title = unique(plot_data$clean_name)
+  
+  p = plot_data %>%
+    ggplot(aes(x = date, y = price)) +
+    geom_point_interactive(
+      aes(
+        tooltip = paste0(
+          "<b>", plot_title, "</b><br>",
+          "date: ", format(date, "%b %Y"), "<br>",
+          "value: ", y_label_fn(price)
+        ),
+        data_id = date
+      ),
+      size = 3,         # Large target
+      alpha = 0.01,     # Invisible until hovered
+      color = "black"   # Base color
+    ) + 
+    geom_line(
+      color = plot_color, 
+      linewidth = 0.8
+    ) +
+    scale_y_continuous(labels = y_label_fn) +
+    labs(
+      title = plot_title,
+      x = NULL, 
+      y = NULL
+    )
+    
+  return(p)
+}
+
+# ------------------------------------------------------------------------------
+# 3. Build Plots
+# ------------------------------------------------------------------------------
+p_home = createInteractivePlot(
+  tb_viz, "MSPUS", "gray80",  
+  scales::label_dollar(scale = 1e-3, suffix = "k") 
+)
+
+p_income = createInteractivePlot(
+  tb_viz, "MEHOINUSA646N", "gray80", 
+  scales::label_dollar(scale = 1e-3, suffix = "k")
+)
+
+p_rate = createInteractivePlot(
+  tb_viz, "MORTGAGE30US", "gray80", 
+  scales::label_number(accuracy = 0.01, scale = 1, suffix = "%")
+)
+
+p_cpi = createInteractivePlot(
+  tb_viz, "CPIAUCSL", "gray80", 
+  scales::label_number(accuracy = 0.01)
+)
+
+# ------------------------------------------------------------------------------
+# 4. Combine and Render
+# ------------------------------------------------------------------------------
+combined_plot = (p_home + p_income) / (p_rate + p_cpi) +
+  plot_annotation(
+    title = "national housing & economic indicators",
+    theme = theme(
+      plot.background = element_rect(fill = "#070607", color = "#070607"),
+      plot.title = element_text(color = "gray80", size = 16, face = "bold"),
+      plot.subtitle = element_text(color = "gray50", size = 12)
+    )
+  )
+
+# Create the widget
+girafe(
+  ggobj = combined_plot,
+  width_svg = 9,
+  height_svg = 6,
+  bg = "#070607", 
+  options = list(
+    opts_hover(css = "fill: white; opacity: 1; stroke: white; stroke-width: 2px;"),
+    opts_tooltip(
+      css = "background-color: #070607; color: gray80; padding:8px; border:1px solid gray50;"
+    ),
+    # Removed invalid 'css' argument here
+    opts_toolbar(saveaspng = F) 
+  )
+)
 ```
 
-What I need to do:
+There are a few things that need to be handled before analysis:
 
-- Put the data in the same time frequency (use time series models)
-  - CPIAUCSL: monthly
-  - MEHOINUSA646N: annual
-  - MORTGAGE30US: weekly
-  - MSPUS: quarterly
-- Forecast some series to match the most recent data point available. Account for uncertainty.
+1. The data is captured at different frequencies. 
+2. The data starts at different times.
+3. Not all the data is recent.^[The 30-year fixed mortgage rate is the most egregious offender. The reason for this, is that Freddie Mac began surveying lenders on mortgage rates in April 1971, making this the earliest date for which consistent, nationwide data is available.]
 
 ```{r}
-# for each symbol, get the max and min date
-tb_n %>% 
-  group_by(symbol) %>% 
+#| label: tbl-observation-dates
+#| tbl-cap: "Latest data points retrieved for each national economic series."
+
+tb_viz %>% 
+  group_by(clean_name) %>% 
   summarize(
-    min_date = min(date),
-    max_date = max(date)
+    `oldest observation` = format(min(date), "%B %e, %Y"),
+    `newest observation` = format(max(date), "%B %e, %Y")
+  ) %>% 
+  right_join(
+    tibble(
+      clean_name = c("consumer price index (cpi)", "median household income", "30-year fixed mortgage rate", "median home price"),
+      `collection frequency` = c("monthly", "annually", "weekly", "quarterly")
+    ),
+    by = "clean_name"
+  ) %>% 
+  rename(series = clean_name) %>% 
+  relocate(series, `collection frequency`) %>% 
+  kable(
+    format = "html"
   )
 ```
 
-A look at the modeled data. Converted to a monthly frequency.^[Weekly frequency has been averaged. Annual and quarterly frequency linearly interpolated. No error estimates included in averaged/interpolated points.] Range examined from the max-min date (`r format(min(tb_nm$date), "%B, %Y")`) of the different series to the max date (`r format(max(tb_nm$date), "%B, %Y")`) of all the series.
+To account for (1), I put everything in a monthly frequency. Cubic splines were used for quarterly and annual data, while weekly data was averaged. For (2), I used the maximum of the minimum date available (e.g. price-to-income ratio begins at 1953). For (3), I first smoothed each series using [LOESS](https://en.wikipedia.org/wiki/Local_regression) then modeled each series using [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) to produce estimates for the most recent date available (`r format(max(tb_final01$date), '%B %Y')`). These estimates should be taken with a grain of salt, though I include $3 \sigma$ prediction intervals to capture the uncertainty. 
 
 ```{r}
-tb_nm %>% 
-  group_by(symbol) %>% 
-  summarize(
-    min_date = min(date),
-    max_date = max(date)
+#| label: fig-national-indicators-harmonized
+#| fig-cap: "Harmonized and smoothed economic indicators over time. Green line shows the smoothed series. Gray line shows the raw series. Dollars are in nominal terms. Hover over the lines to see specific values."
+#| column: body
+#| out-width: "100%"
+
+tb_viz_nm = tb_nm %>%
+  mutate(
+    clean_name = case_match(
+      symbol,
+      "MSPUS"         ~ "median home price",
+      "MEHOINUSA646N" ~ "median household income",
+      "MORTGAGE30US"  ~ "30-year fixed mortgage rate",
+      "CPIAUCSL"      ~ "consumer price index (cpi)",
+      .default = symbol
+    )
   )
+
+# 2. Define function for Synced Plots with Ribbons
+createSyncedPlot = function(data, symbol_code, plot_color, y_label_fn) {
+  
+  plot_data = data %>% 
+    filter(symbol == symbol_code)
+  
+  plot_data2 = tb_viz %>% 
+    filter(symbol == symbol_code)
+  
+  plot_title = unique(plot_data$clean_name)
+  
+  p = plot_data %>%
+    mutate(
+      tooltip_ = ifelse(
+        pred_sd == 0,
+        paste0(
+          "<b>", plot_title, "</b><br>",
+          "date: ", format(date, "%b %Y"), "<br>",
+          "value: ", y_label_fn(price)
+        ),
+         paste0(
+          "<b>", plot_title, "</b><br>",
+          "date: ", format(date, "%b %Y"), "<br>",
+          "value: ", y_label_fn(price), "<br>",
+          "range: ", y_label_fn(price - 3 * pred_sd), " - ", y_label_fn(price + 3 * pred_sd)
+    )
+      )
+    ) %>% 
+    ggplot(aes(x = date, y = price)) +
+    geom_line(
+      data = plot_data2,
+      color = "gray80", 
+      linewidth = 0.8,
+      alpha = 0.7
+    ) + 
+    # Layer 1: Prediction Interval Ribbon
+    # This is static (not interactive), just visual context
+    geom_ribbon(
+      aes(ymin = price - 3 * pred_sd, ymax = price + 3 * pred_sd),
+      alpha = 0.4,
+      fill = "gray40", # Darker gray to match dark theme better
+      color = NA
+    ) +
+    # Layer 2: The Interactive Point (Invisible until hovered)
+    # CRITICAL: data_id = date allows the plots to talk to each other
+    geom_point_interactive(
+      aes(
+        tooltip = tooltip_,
+        data_id = date 
+      ),
+      size = 3,          
+      alpha = 0.01,      # Invisible default state
+      color = "black",
+      hover_nearest = TRUE
+    ) + 
+    # Layer 3: The visual line
+    geom_line(
+      color = plot_color, 
+      alpha = 0.7,
+      linewidth = 0.8
+    ) +
+    scale_y_continuous(labels = y_label_fn) +
+    labs(
+      title = plot_title,
+      x = NULL, 
+      y = NULL
+    )
+    
+  return(p)
+}
+
+# ------------------------------------------------------------------------------
+# 3. Build Plots
+# ------------------------------------------------------------------------------
+
+p_home = createSyncedPlot(
+  tb_viz_nm, "MSPUS", "#006203",  
+  scales::label_dollar(scale = 1e-3, suffix = "k") 
+)
+
+p_income = createSyncedPlot(
+  tb_viz_nm, "MEHOINUSA646N", "#006203", 
+  scales::label_dollar(scale = 1e-3, suffix = "k")
+)
+
+p_rate = createSyncedPlot(
+  tb_viz_nm, "MORTGAGE30US", "#006203", 
+  scales::label_number(accuracy = 0.01, scale = 1, suffix = "%")
+)
+
+p_cpi = createSyncedPlot(
+  tb_viz_nm, "CPIAUCSL", "#006203", 
+  scales::label_number(accuracy = 0.01)
+)
+
+# ------------------------------------------------------------------------------
+# 4. Combine and Render
+# ------------------------------------------------------------------------------
+
+combined_plot = (p_home + p_income) / (p_rate + p_cpi) +
+  plot_annotation(
+    title = "smoothed economic indicators",
+    theme = theme(
+      plot.background = element_rect(fill = "#070607", color = "#070607"),
+      plot.title = element_text(color = "gray80", size = 16, face = "bold"),
+      plot.subtitle = element_text(color = "gray50", size = 12)
+    )
+  )
+
+# Create the widget
+girafe(
+  ggobj = combined_plot,
+  width_svg = 9,
+  height_svg = 6,
+  bg = "#070607", 
+  options = list(
+    # CSS for the 'active' state (when hovered or synced)
+    # The opacity: 1 here makes the invisible points visible on all plots
+    opts_hover(css = "fill: #006203; opacity: 1; stroke: white; stroke-width: 2px;"),
+    
+    # CSS for the tooltip box
+    opts_tooltip(
+      css = "background-color: #070607; color: gray80; padding:8px; border:1px solid gray50;"
+    ),
+    
+    # Inverted logic: 'hover_inv' defines style for non-selected points (dim them slightly?)
+    # Usually irrelevant if points are invisible, but good hygiene
+    opts_hover_inv(css = "opacity: 0.01;"),
+    
+    opts_toolbar(saveaspng = F) 
+  )
+)
 ```
 
+These smoothed indicators are used to calculate the metrics in the following sections.
+
+### price-to-income ratio
+
+We can use nominal dollars to calculate the price to income ratio. I'll include a linear model to help us understand the trend over time.
 
 ```{r}
-tb_nm %>% 
-  ggplot(aes(x = date)) +
-  geom_ribbon(aes(ymin = price - 3*pred_sd, ymax = price + 3*pred_sd), alpha = 0.2, color = NA, fill = "gray") +
-  geom_line(aes(y = price)) +
-  facet_wrap(~symbol, scales = "free_y") +
-  labs(title = expression("monthly forecasts with 3" * sigma * " prediction intervals"),
-       subtitle = "mixed-frequency inputs harmonized to monthly",
-       y = "predicted value", x = "date")
+#| label: fig-price-to-income-ratio
+#| fig-cap: "Price-to-income ratio over time. Monthly forecasts with 3$\\sigma$ prediction interval. Linear model with 3$\\sigma$ confidence interval."
+#| column: body
+#| out-width: "100%"
+
+# 1. Define formatting helpers
+fmt_num = scales::label_number(accuracy = 0.01)
+fmt_date = function(d) format(d, "%b %Y")
+
+# 2. Build the ggplot object with the Dark Theme applied
+gg_interactive = tb_final01 %>% 
+  mutate(
+    pi_tooltip = ifelse(
+      pi_sd == 0,
+      paste0(
+        "<b>price-to-income ratio</b><br>",
+        "date: ", fmt_date(date), "<br>",
+        "value: ", fmt_num(pi_ratio), "<br>"
+      ),
+      paste0(
+        "<b>price-to-income ratio</b><br>",
+        "date: ", fmt_date(date), "<br>",
+        "value: ", fmt_num(pi_ratio), "<br>",
+        "range: ", fmt_num(pi_l), " - ", fmt_num(pi_u)
+      )
+    )
+  ) %>% 
+  ggplot(aes(x = date, y = pi_ratio)) + 
+  geom_ribbon(
+    aes(ymin = pi_l, ymax = pi_u), alpha = 0.4, color = NA, fill = "gray50"
+    ) + 
+  geom_point_interactive(
+    aes(
+      tooltip = pi_tooltip,
+      data_id = as.character(date)
+    ),
+    size = 3,       
+    alpha = 0.001,   # Invisible
+    color = "black" # Hover color
+  ) +
+  # Interactive Layer for Linear Model
+  geom_point_interactive(
+    data = tb_lm_pi,
+    aes(
+      y = fit,
+      tooltip = paste0(
+        "<b>linear model fit</b><br>",
+        "date: ", fmt_date(date), "<br>",
+        "fit value: ", fmt_num(fit), "<br>",
+        "fit range: ", fmt_num(fit_lower), " - ", fmt_num(fit_upper)
+      ),
+      data_id = paste0("lm-", as.character(date)) 
+    ),
+    size = 3, 
+    alpha = 0.001, 
+    color = "black"
+  ) +
+  geom_line(color = "gray80", linewidth = 0.8) + 
+  
+  # --- SERIES 2: LINEAR MODEL (Orange) ---
+  
+  # Visual Ribbon
+  geom_ribbon(
+    data = tb_lm_pi, 
+    aes(ymin = fit_lower, ymax = fit_upper), 
+    alpha = 0.4, color = NA, fill = "#ffa500"
+  ) + 
+  
+  # Visual Line
+  geom_line(
+    data = tb_lm_pi, 
+    aes(y = fit), 
+    color = "#ffa500", linewidth = 0.8
+  ) +
+  
+  
+  
+  # --- Labels ---
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "price-to-income ratio"
+  ) + 
+  theme(
+      plot.background = element_rect(fill = "#070607", color = "#070607"),
+      plot.title = element_text(color = "gray80", size = 16, face = "bold"),
+      plot.subtitle = element_text(color = "gray50", size = 12)
+    )
+
+# 3. Render with Dark Mode Tooltips
+girafe(
+  ggobj = gg_interactive,
+  width_svg = 9, 
+  height_svg = 3,
+  bg = "#070607", # Match the background color of the SVG
+  options = list(
+    
+    # Hover: White dot with transparency
+    opts_hover(css = "fill: white; opacity: 1; stroke: none;"),
+    
+    # Tooltip: Dark background (#070607) with gray text and border
+    opts_tooltip(
+      css = "background-color: #070607; color: gray80; padding: 10px; border: 1px solid gray50; border-radius: 2px;"
+    ),
+    
+    opts_toolbar(saveaspng = FALSE)
+  )
+)
 ```
 
-Now, to build out the metrics:
+### debt-to-income ratio
+
+```{r}
+#| label: fig-debt-to-income-ratio
+#| fig-cap: "Debt-to-income ratio over time. Monthly forecasts with 3$\\sigma$ prediction interval. Linear model with 3$\\sigma$ confidence interval."
+#| column: body
+#| out-width: "100%"
+
+# 2. Build the ggplot object with the Dark Theme applied
+gg_interactive = tb_final01 %>%
+  filter(!is.na(dti_ratio)) %>% 
+  mutate(
+    dti_tooltip = ifelse(
+      dti_sd == 0,
+      paste0(
+        "<b>debt-to-income ratio</b><br>",
+        "date: ", fmt_date(date), "<br>",
+        "value: ", fmt_num(dti_ratio), "<br>"
+      ),
+      paste0(
+        "<b>debt-to-income ratio</b><br>",
+        "date: ", fmt_date(date), "<br>",
+        "value: ", fmt_num(dti_ratio), "<br>",
+        "range: ", fmt_num(dti_l), " - ", fmt_num(dti_u)
+      )
+    )
+  ) %>% 
+  ggplot(aes(x = date, y = dti_ratio)) + 
+  geom_ribbon(
+    aes(ymin = dti_l, ymax = dti_u), alpha = 0.4, color = NA, fill = "gray50"
+    ) + 
+  geom_point_interactive(
+    aes(
+      tooltip = dti_tooltip,
+      data_id = as.character(date)
+    ),
+    size = 3,       
+    alpha = 0.001,   # Invisible
+    color = "black" # Hover color
+  ) +
+  # Interactive Layer for Linear Model
+  geom_point_interactive(
+    data = tb_lm_dti,
+    aes(
+      y = fit,
+      tooltip = paste0(
+        "<b>linear model fit</b><br>",
+        "date: ", fmt_date(date), "<br>",
+        "fit value: ", fmt_num(fit), "<br>",
+        "fit range: ", fmt_num(fit_lower), " - ", fmt_num(fit_upper)
+      ),
+      data_id = paste0("lm-", as.character(date)) 
+    ),
+    size = 3, 
+    alpha = 0.001, 
+    color = "black"
+  ) +
+  geom_line(color = "gray80", linewidth = 0.8) + 
+  geom_ribbon(
+    data = tb_lm_dti, 
+    aes(ymin = fit_lower, ymax = fit_upper), 
+    alpha = 0.3, color = NA, fill = "#ffa500"
+  ) + 
+  geom_line(
+    data = tb_lm_dti, 
+    aes(y = fit), 
+    color = "#ffa500", linewidth = 0.8
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "debt-to-income ratio"
+  ) + 
+  theme(
+      plot.background = element_rect(fill = "#070607", color = "#070607"),
+      plot.title = element_text(color = "gray80", size = 16, face = "bold"),
+      plot.subtitle = element_text(color = "gray50", size = 12)
+    )
+
+# 3. Render with Dark Mode Tooltips
+girafe(
+  ggobj = gg_interactive,
+  width_svg = 9, 
+  height_svg = 3,
+  bg = "#070607", # Match the background color of the SVG
+  options = list(
+    
+    # Hover: White dot with transparency
+    opts_hover(css = "fill: white; opacity: 1; stroke: none;"),
+    
+    # Tooltip: Dark background (#070607) with gray text and border
+    opts_tooltip(
+      css = "background-color: #070607; color: gray80; padding: 10px; border: 1px solid gray50; border-radius: 2px;"
+    ),
+    
+    opts_toolbar(saveaspng = FALSE)
+  )
+)
+```
+
+
+# scratch-work
 
 ```{r}
 # inflation adjusted median home prices
@@ -470,7 +941,3 @@ tb_final %>%
 ```
 
 From the above model, we find that the ratio of the typical cost of a house to the typical household income has increased by `r round(lm_pir$coefficients[2]*365, 2)` a year on average from `r format(min(tb_lm_pir$date), "%B, %Y")` to `r format(max(tb_lm_pir$date), "%B, %Y")`.
-
-## state scale
-
-## county scale

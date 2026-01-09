@@ -72,10 +72,10 @@
           margin: 0;
           padding: 0;
           background-color: #000;
-          overflow: hidden; /* Good! */
+          overflow: hidden; 
           height: 100vh;
           width: 100vw;
-          position: fixed; /* Helps prevent accidental scrolling on mobile */
+          position: fixed; 
       }
       
       svg {
@@ -95,7 +95,7 @@
         let canvas_height = window.innerHeight;
         
         const angle_even = 5.0 * Math.PI / 180;
-        const angle_odd = -8.0 * Math.PI / 180;
+        const angle_odd = -10.0 * Math.PI / 180;
         
         const draw_duration = 1500; 
         const fade_duration = 15000; 
@@ -121,9 +121,8 @@
             let current_x = 0;
             let current_y = 0;
             
-            // Changed angle to approximately 115 degrees
-            // In SVG coordinates (0 is Right, 90 is Down), 115 degrees points Left-Down.
-            let current_angle = 100 * Math.PI / 180; 
+            // CHANGED: Angle set to -90 degrees so it grows UPWARDS
+            let current_angle = -90 * Math.PI / 180; 
             
             let point_coords = [{x: current_x, y: current_y}];
 
@@ -146,8 +145,9 @@
             .attr("preserveAspectRatio", "xMaxYMin meet")
             .style("background", "#000");
 
+        // CHANGED: Y set to (canvas_height - 50) to start at the bottom
         const main_group = svg_container.append("g")
-            .attr("transform", `translate(${canvas_width - 50}, 50)`);
+            .attr("transform", `translate(${canvas_width / 2}, ${canvas_height - 50})`);
 
         const line_generator = d3.line()
             .x(d => d.x)
@@ -202,7 +202,8 @@
             canvas_width = window.innerWidth;
             canvas_height = window.innerHeight;
             svg_container.attr("viewBox", `0 0 ${canvas_width} ${canvas_height}`);
-            main_group.attr("transform", `translate(${canvas_width - 50}, 50)`);
+            // CHANGED: Update resize logic to keep it at the bottom center
+            main_group.attr("transform", `translate(${canvas_width / 2}, ${canvas_height - 50})`);
         };
     </script>
 </body>

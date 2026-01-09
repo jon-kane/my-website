@@ -86,7 +86,8 @@ tb_n4.1 = read_csv(
   rename(price = `Median Home Price (NSA)`) %>% 
   mutate(date = as_date(date, format = "%a %b %d %Y")) %>% 
   mutate(symbol = "MSPUS") %>% 
-  relocate(symbol)
+  relocate(symbol) %>% 
+  filter(year(date) < 1963)
 
 # ------------------------------------------------------------------------------
 tb_n = bind_rows(
@@ -95,8 +96,10 @@ tb_n = bind_rows(
   tb_n2.1,
   tb_n2.2,
   tb_n3,
-  tb_n4
-)
+  tb_n4,
+  tb_n4.1
+) %>% 
+  arrange(symbol, date) 
 
 # get the max-min date to consider
 min_date = tb_n %>% 

@@ -8,7 +8,7 @@ website:
   site-url: "https://jon-kane.github.io/justan3ngin33r"
   favicon: "images/logo_gray.png"
   navbar:
-    logo: "images/logo.png"
+    logo: "images/logo_cropped.png"
     logo-href: "https://buymeacoffee.com/justan3ngin33r"
     left:
       - href: index.qmd
@@ -19,9 +19,9 @@ website:
 format:
   html:
     theme: cyborg
-    page-layout: full
+    page-layout: article
     toc: true
-    toc-title: "on this page"
+    toc-title: "on the page"
     language: 
       code-links-title: "get the code"
     code-fold: true
