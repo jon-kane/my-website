@@ -9,6 +9,7 @@ website:
   favicon: "images/logo_gray.png"
   navbar:
     logo: "images/logo.png"
+    logo-href: "https://buymeacoffee.com/justan3ngin33r"
     left:
       - href: index.qmd
         text: home
@@ -21,6 +22,8 @@ format:
     page-layout: full
     toc: true
     toc-title: "on this page"
+    language: 
+      code-links-title: "get the code"
     code-fold: true
     date-format: long
     css: styles.css

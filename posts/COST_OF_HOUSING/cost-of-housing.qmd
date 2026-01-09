@@ -5,6 +5,10 @@ categories: [economics, housing]
 format: html
 date: last-modified
 date-format: long
+code-links:
+  - text: repository
+    icon: github
+    href: "https://github.com/jon-kane/justan3ngin33r/tree/main/posts/COST_OF_HOUSING"
 ---
 
 ```{r setup}
@@ -121,7 +125,7 @@ dti_target_percentile = get_dti_percentile(last(tb_lm_dti$dti_ratio))
 
 ::: {.callout-warning}
 ## Work in Progress
-I am actively updating this post. Content may change frequently as work my way through this article.
+I am actively updating this post. Content may change frequently as I work my way through this article.
 :::
 
 # tl;dr
@@ -150,7 +154,9 @@ I'm *planning* to examine this at three different geographic scales:
 - State
 - County
 
-# national
+# analysis
+
+## national scale
 
 The data we are using from the [FRED](https://fred.stlouisfed.org/):
 
@@ -465,4 +471,6 @@ tb_final %>%
 
 From the above model, we find that the ratio of the typical cost of a house to the typical household income has increased by `r round(lm_pir$coefficients[2]*365, 2)` a year on average from `r format(min(tb_lm_pir$date), "%B, %Y")` to `r format(max(tb_lm_pir$date), "%B, %Y")`.
 
-This [website](https://www.longtermtrends.com/home-price-median-annual-income-ratio/) provides a good visual, tracking the change over a longer period of time. However, they use the Case-Shiller index which gives the average home price and divide that by the median. This gives a more pessimistic view of the cost of housing than is actual.
+## state scale
+
+## county scale
