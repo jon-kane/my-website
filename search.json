@@ -4,7 +4,7 @@
     "href": "writings.html",
     "title": "writings",
     "section": "",
-    "text": "how expensive is housing?\n\n\n\neconomics\n\nhousing\n\n\n\ncost of housing in the US over time\n\n\n\n\n\nJanuary 9, 2026\n\n31 min\n\n\n\n\nNo matching items"
+    "text": "how expensive is housing in the US?\n\n\n\neconomics\n\nhousing\n\n\n\nan examination of the cost of housing in the US over time\n\n\n\n\n\nJanuary 14, 2026\n\n31 min\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "index.html",
@@ -16,14 +16,14 @@
   {
     "objectID": "posts/COST_OF_HOUSING/cost-of-housing.html",
     "href": "posts/COST_OF_HOUSING/cost-of-housing.html",
-    "title": "how expensive is housing?",
+    "title": "how expensive is housing in the US?",
     "section": "",
     "text": "WarningWork in Progress\n\n\n\nI am actively updating this post. Content will change as I work my way through this article."
   },
   {
     "objectID": "posts/COST_OF_HOUSING/cost-of-housing.html#national-scale",
     "href": "posts/COST_OF_HOUSING/cost-of-housing.html#national-scale",
-    "title": "how expensive is housing?",
+    "title": "how expensive is housing in the US?",
     "section": "national scale",
     "text": "national scale\n\nthe data\nThe data I’m using is mostly from the FRED. I’ve supplemented some of these series with data extending further back to get a more complete picture. Below are the data series and where I got the supplemental data:\n\nCPIAUCSL: Consumer Price Index for All Urban Consumers: All Items in U.S. City Average\nMEHOINUSA646N: Median Household Income in the United States\n\nYears 1947-1965 are from p.877 of a US Census Bureau publication.\nYears 1967-1983 are also from the US Census Bureau\n\nMORTGAGE30US: 30-Year Fixed Rate Mortgage Average5 in the United States\nMSPUS: Median Sales Price of Houses Sold for the United States\n\nYears 1953-1962 are from few different indices6 that have been combined. The author explains the process here.\n\n\n5 Unfortunately, there is no high-frequency median equivalent to this data that I know of. Fortunately, there are some restrictive filters (e.g. 20% down, excellent credit, excluding jumbo loans) on which data to use that removes large outliers making the mean more centered. See here for more details6 The NAR Median Sales Price of Existing Homes, Shiller’s NSA Home Sale Index, and the FHFA’s NSA Existing Home Sale IndexLet’s take a look at the data below:\n\n\n\n\n\n\n\n\nFigure 1: National housing and economic indicators over time. Dollars are in nominal terms. Hover over the lines to see specific values.\n\n\n\n\nThere are a few things that need to be handled before analysis:\n\nThe data is captured at different frequencies.\nThe data starts at different times.\nNot all the data is recent.7\n\n7 The 30-year fixed mortgage rate is the most egregious offender. The reason for this, is that Freddie Mac began surveying lenders on mortgage rates in April 1971, making this the earliest date for which consistent, nationwide data is available.\n\n\n\nTable 1: Latest data points retrieved for each national economic series.\n\n\n\n\n\n\nseries\ncollection frequency\noldest observation\nnewest observation\n\n\n\n\n30-year fixed mortgage rate\nweekly\nApril 2, 1971\nJanuary 8, 2026\n\n\nconsumer price index (cpi)\nmonthly\nJanuary 1, 1947\nNovember 1, 2025\n\n\nmedian home price\nquarterly\nJanuary 15, 1953\nApril 1, 2025\n\n\nmedian household income\nannually\nJanuary 1, 1947\nJanuary 1, 2024\n\n\n\n\n\n\n\n\nTo account for (1), I put everything in a monthly frequency. Cubic splines were used for quarterly and annual data, while weekly data was averaged. For (2), I used the maximum of the minimum date available (e.g. price-to-income ratio begins at 1953). For (3), I first smoothed each series using LOESS then modeled each series using ARIMA to produce estimates for the most recent date available (January 2026). These estimates should be taken with a grain of salt, though I include \\(3 \\sigma\\) prediction intervals to capture the uncertainty.\n\n\n\n\n\n\n\n\nFigure 2: Harmonized and smoothed economic indicators over time. Green line shows the smoothed series. Gray line shows the raw series. Dollars are in nominal terms. Hover over the lines to see specific values.\n\n\n\n\nThese smoothed indicators are used to calculate the metrics in the following sections.\n\n\nprice-to-income ratio\nWe can use nominal dollars to calculate the price to income ratio. I’ll include a linear model to help us understand the trend over time.\n\n\n\n\n\n\n\n\nFigure 3: Price-to-income ratio over time. Monthly forecasts with 3\\(\\sigma\\) prediction interval. Linear model with 3\\(\\sigma\\) confidence interval.\n\n\n\n\n\n\ndebt-to-income ratio\n\n\n\n\n\n\n\n\nFigure 4: Debt-to-income ratio over time. Monthly forecasts with 3\\(\\sigma\\) prediction interval. Linear model with 3\\(\\sigma\\) confidence interval."
   }
