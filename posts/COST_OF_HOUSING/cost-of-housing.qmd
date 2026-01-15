@@ -146,7 +146,7 @@ di_data = getStuff("dti_ratio", tb_final01)
 At a national scale,
 
 - From `r format(min(hp_data$tb$date), '%B %Y')` to `r format(max(hp_data$tb$date), '%B %Y')`, the adjusted median home price (`r cpi_baseline_year` dollars) has **increased by `r scales::dollar(coef(hp_data$mod)[2]*365, 2)`  per year on average**. As of `r format(max(hp_data$tb$date), '%B %Y')`, the adjusted median home price stands at `r scales::dollar(last(hp_data$tb$home_real), 2)`, placing it in the **`r scales::ordinal(hp_data$tp * 100)` percentile of all observations** in this period.
-- Over the same period, the adjusted median household income (`r cpi_baseline_year` dollars) has **increased by `r scales::dollar(coef(hi_data$mod)[2]*365, 2)`  per year on average**. As of `r format(max(hp_data$tb$date), '%B %Y')`, the adjusted median household income stands at `r scales::dollar(last(hi_data$tb$home_real), 2)`, placing it in the **`r scales::ordinal(hi_data$tp * 100)` percentile of all observations** in this period.
+- From `r format(min(hi_data$tb$date), '%B %Y')` to `r format(max(hi_data$tb$date), '%B %Y')`, the adjusted median household income (`r cpi_baseline_year` dollars) has **increased by `r scales::dollar(coef(hi_data$mod)[2]*365, 2)`  per year on average**. As of `r format(max(hp_data$tb$date), '%B %Y')`, the adjusted median household income stands at `r scales::dollar(last(hi_data$tb$home_real), 2)`, placing it in the **`r scales::ordinal(hi_data$tp * 100)` percentile of all observations** in this period.
 - From `r format(min(pi_data$tb$date), '%B %Y')` to `r format(max(pi_data$tb$date), '%B %Y')`, the price-to-income ratio of a home has **increased by `r round(coef(pi_data$mod)[2]*365*100, 2)` percentage points (pp) per year on average**. As of `r format(max(pi_data$tb$date), '%B %Y')`, the ratio stands at `r round(last(pi_data$tb$pi_ratio), 2)`^[Meaning the typical house costs the typical household `r round(last(pi_data$tb$pi_ratio), 2)` $\times$ their gross annual income], placing it in the **`r scales::ordinal(pi_data$tp * 100)` percentile of all observations** in this period.
 - From `r format(min(di_data$tb$date), '%B %Y')` to `r format(max(di_data$tb$date), '%B %Y')`, the mortgage debt-to-income ratio has **decreased by `r round(coef(di_data$mod)[2]*365*100, 2)` pp per year on average**. As of `r format(max(di_data$tb$date), '%B %Y')`, the ratio stands at `r round(last(di_data$tb$dti_ratio), 2)`^[Meaning the typical household would spend `r round(last(di_data$tb$dti_ratio), 2)` $\times$ their monthly income on the typical mortgage. This calculation assumes only interest and principal.], placing it in the **`r scales::ordinal(di_data$tp * 100)` percentile of all observations** in this period.
 
@@ -300,8 +300,7 @@ girafe(
 There are a few things that need to be handled before analysis:
 
 1. The data is captured at different frequencies. 
-2. The data starts at different times.
-3. Not all the data is recent.^[The 30-year fixed mortgage rate is the most egregious offender. The reason for this, is that Freddie Mac began surveying lenders on mortgage rates in April 1971, making this the earliest date for which consistent, nationwide data is available.]
+2. Not all the data is recent.^[The 30-year fixed mortgage rate is the most egregious offender. The reason for this, is that Freddie Mac began surveying lenders on mortgage rates in April 1971, making this the earliest date for which consistent, nationwide data is available.]
 
 ```{r}
 #| label: tbl-observation-dates
@@ -327,7 +326,7 @@ tb_viz %>%
   )
 ```
 
-To account for (1), I put everything in a monthly frequency. Cubic splines were used for quarterly and annual data, while weekly data was averaged. For (2), I used the maximum of the minimum date available (e.g. price-to-income ratio begins at 1953). For (3), I first smoothed each series using [LOESS](https://en.wikipedia.org/wiki/Local_regression) then modeled each series using [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) to produce estimates for the most recent date available (`r format(max(tb_final01$date), '%B %Y')`). These estimates should be taken with a grain of salt, though I include $3 \sigma$ prediction intervals to capture the uncertainty. 
+To account for (1), I put everything in a monthly frequency. Cubic splines were used for quarterly and annual data, while weekly data was averaged. For (2), I first smoothed each series using [LOESS](https://en.wikipedia.org/wiki/Local_regression) then modeled each series using [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) to produce estimates for the most recent date available (`r format(max(tb_final01$date), '%B %Y')`). These estimates should be taken with a grain of salt, though I include $3 \sigma$ prediction intervals to capture the uncertainty. 
 
 ```{r}
 #| label: fig-national-indicators-harmonized
@@ -618,7 +617,7 @@ createForecastPlot = function(
 }
 
 createForecastPlot(
-  data_main = tb_final01,
+  data_main = tb_final01 %>% filter(!is.na(home_real)),
   data_lm = hp_data$tb,
   y_col = "home_real",
   y_l_col = "home_real_l",
@@ -663,7 +662,7 @@ We can use nominal dollars to calculate the price to income ratio. I'll include 
 #| out-width: "100%"
 
 createForecastPlot(
-  data_main = tb_final01,
+  data_main = tb_final01 %>% filter(!is.na(pi_ratio)),
   data_lm = pi_data$tb,
   y_col = "pi_ratio",
   y_l_col = "pi_l",

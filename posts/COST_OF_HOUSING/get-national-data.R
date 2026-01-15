@@ -103,11 +103,12 @@ tb_n = bind_rows(
 
 # get the max-min date to consider
 min_date = tb_n %>% 
-  filter(symbol != "MORTGAGE30US") %>% 
-  group_by(symbol) %>% 
-  summarize(min_date = min(date)) %>% 
-  pull(min_date) %>% 
-  max()
+  # filter(symbol != "MORTGAGE30US") %>% 
+  # group_by(symbol) %>% 
+  # summarize(min_date = min(date)) %>% 
+  # pull(min_date) %>% 
+  pull(date) %>% 
+  min()
 
 max_date = tb_n %>% 
   pull(date) %>% 
