@@ -154,12 +154,12 @@ Much has been written recently on housing affordability, with much of it being n
 
 In order to provide some clarity on the question of housing affordability, I'm going to look at four metrics in particular:
 
-1. The ratio of the typical cost of a house to the typical household income. In this article, I'll refer to it as the *price-to-income ratio*.
-2. The proportion of a person's monthly income that would be dedicated to their monthly mortgage. For my analysis, this will be limited to only interest and principal^[I'm interested in having a better picture of this by incorporating property taxes and home insurance costs if someone could get me the data...], and will assume a 20% downpayment, so a loan on 80% the value of a house. I'll refer to it as the *debt-to-income ratio* in the article.
-3. The real^[`r cpi_baseline_year` dollars] median home price over time.
-4. The real median household income over time.
+1. The real^[`r cpi_baseline_year` dollars] median home price over time.
+2. The real median household income over time.
+3. The ratio of the typical cost of a house to the typical household income. In this article, I'll refer to it as the *price-to-income ratio*.
+4. The proportion of a person's monthly income that would be dedicated to their monthly mortgage. For my analysis, this will be limited to only interest and principal^[I'm interested in having a better picture of this by incorporating property taxes and home insurance costs if someone could get me the data...], and will assume a 20% downpayment, so a loan on 80% the value of a house. I'll refer to it as the *debt-to-income ratio* in the article.
 
-The first two metrics are the most important and incorporate the bottom two. However, the bottom two can give us better context in and of themselves. 
+The last two metrics are the most important and incorporate the top two. However, the top two can give us better context in and of themselves. 
 
 # analysis
 
@@ -655,7 +655,7 @@ A few key figures on these differences:
 | [complete plumbing](https://www.census.gov/data/tables/time-series/dec/coh-plumbing.html) | 66% | 99% |
 | air conditioning | [under 2%](https://www.sciencedirect.com/science/article/pii/S0014498308000132) | [over 90%](https://www.eia.gov/consumption/residential/data/2020/hc/pdf/HC%207.1.pdf) |
 
-: Comparison of housing features over time {#tbl-housing-features}
+: Comparison of housing features from 1950s to 2020s {#tbl-housing-features}
 
 [Andrew Latham](https://www.supermoney.com/author/andrew-latham) did a [great analysis on housing affordability](https://www.supermoney.com/inflation-adjusted-home-prices) where he found that the price per square foot of a house (ignoring amenities) from 1978-2023 grew by 20% which works out to roughly 0.44 pp per year which is about `r scales::percent(0.44/((coef(hp_data$mod)[2]*365/hp_data$tb$home_real[1])*100), accuracy = 1)` the rate of house prices in general. 
 
@@ -686,10 +686,6 @@ createForecastPlot(
   dp = hi_data
 )
 ```
-
-From `r format(min(hi_data$tb$date), '%B %Y')` to `r format(max(hi_data$tb$date), '%B %Y')`, the real median household income has **increased by `r scales::dollar(coef(hi_data$mod)[2]*365, 2)`  per year on average**. As of `r format(max(hp_data$tb$date), '%B %Y')`, the real median household income stands at `r scales::dollar(last(hi_data$tb$income_real), 2)`, placing it in the **`r scales::ordinal(hi_data$tp * 100)` percentile of all observations** in this period.
-
-There are three periods worth focusing on in @fig-real-household-income: Mid 1948 - late 1964, late 1964 - early 2012, and early 2012 - today. Let's examine each of these in turn.
 
 ```{r real-income-return-over-3-periods}
 p1_ri_1 = tb_final01 %>% 
@@ -725,23 +721,29 @@ getDif = function(date_start, date_end) {
 }
 ```
 
+From `r format(min(hi_data$tb$date), '%B %Y')` to `r format(max(hi_data$tb$date), '%B %Y')`, the real median household income has **increased by `r scales::dollar(coef(hi_data$mod)[2]*365, 2)`  per year on average**. As of `r format(max(hp_data$tb$date), '%B %Y')`, the real median household income stands at `r scales::dollar(last(hi_data$tb$income_real), 2)`, placing it in the **`r scales::ordinal(hi_data$tp * 100)` percentile of all observations** in this period.
+
+There are three periods worth focusing on in @fig-real-household-income: Mid 1948 - late 1964, late 1964 - early 2012, and early 2012 - today. These periods are marked by significant growth (`r round((((p1_ri_2/p1_ri_1) - 1)/getDif(as.Date("1948-06-01"), as.Date("1964-12-01")) * 100), 2)` pp/year), little to no growth (`r round((((p2_ri_2/p1_ri_2) - 1)/getDif(as.Date("1964-12-01"), as.Date("2012-01-01")) * 100), 2)` pp/year), and substantial growth (`r round((((p3_ri_2/p2_ri_2) - 1)/getDif(as.Date("2012-01-01"), tb_final01$date %>% last()) * 100), 2)` pp/year), respectively. Let's examine each of these periods in turn.
+
 ##### Mid 1948 - late 1964
 
-This period saw significant growth over a brief period of time. From June 1948 to December 1964, real median household income grew from `r dollar(p1_ri_1)` to `r dollar(p1_ri_2)` representing an annual growth of `r round((((p1_ri_2/p1_ri_1) - 1)/getDif(as.Date("1948-06-01"), as.Date("1964-12-01")) * 100), 2)` pp per year. 
+This period saw significant growth over a brief period of time. From June 1948 to December 1964, real median household income grew from `r dollar(p1_ri_1)` to `r dollar(p1_ri_2)` representing an annual growth of `r round((((p1_ri_2/p1_ri_1) - 1)/getDif(as.Date("1948-06-01"), as.Date("1964-12-01")) * 100), 2)` pp per year. NEED DETAILS ON ECONOMIC CONDITION.
 
 ##### Late 1964 - early 2012
 
-From December 1964 to January 2012, the real median household income only grew to `r dollar(p2_ri_2)` representing an annual growth of `r round((((p2_ri_2/p1_ri_2) - 1)/getDif(as.Date("1964-12-01"), as.Date("2012-01-01")) * 100), 2)` pp per year. Of course there were highs and lows over this period^[The peak income over this period was reached on July 1999 at `r dollar(p2_ri_rng$income_real[1])` representing a growth of `r round((((p2_ri_rng$income_real[1]/p1_ri_2) - 1)/getDif(as.Date("1964-12-01"), as.Date("1999-07-01")) * 100), 2)` pp per year. The lowest income over this period was reached on June 1982 at `r dollar(p2_ri_rng$income_real[2])` representing a decline of `r round((((p2_ri_rng$income_real[2]/p1_ri_2) - 1)/getDif(as.Date("1964-12-01"), as.Date("1999-07-01")) * 100), 2)` pp per year.], but overall growth was stagnant^[This becomes nebulous quickly. [Analysis by the Urban Institute](https://www.urban.org/sites/default/files/publication/65351/2000331-Beyond-the-Wage-Stagnation-Story.pdf) (a left-leaning think tank) have found that when you include all payments (e.g. benefits from employer), from 1979 - 2013 real income grew by roughly 1.1 pp per year. Furthermore, when you break up the analysis by different demographics (age, gender, education, etc.) you see some groups had significant growth (60+, women, higher education) while others lagged behind (25-34, men, less than BA).]. 
+This period saw little to no growth. From December 1964 to January 2012, the real median household income only grew to `r dollar(p2_ri_2)` representing an annual growth of `r round((((p2_ri_2/p1_ri_2) - 1)/getDif(as.Date("1964-12-01"), as.Date("2012-01-01")) * 100), 2)` pp per year. Of course there were highs and lows over this period^[The peak income over this period was reached on July 1999 at `r dollar(p2_ri_rng$income_real[1])` representing a growth of `r round((((p2_ri_rng$income_real[1]/p1_ri_2) - 1)/getDif(as.Date("1964-12-01"), as.Date("1999-07-01")) * 100), 2)` pp per year. The lowest income over this period was reached on June 1982 at `r dollar(p2_ri_rng$income_real[2])` representing a decline of `r round((((p2_ri_rng$income_real[2]/p1_ri_2) - 1)/getDif(as.Date("1964-12-01"), as.Date("1999-07-01")) * 100), 2)` pp per year.], but overall growth was stagnant. Further analyzing this period becomes nebulous quickly. [Analysis by the Urban Institute](https://www.urban.org/sites/default/files/publication/65351/2000331-Beyond-the-Wage-Stagnation-Story.pdf) (a left-leaning think tank) have found that when you include all payments (e.g. benefits from employer), from 1979 - 2013 real income grew by roughly 1.1 pp per year. Furthermore, when you break up the analysis by different demographics (age, gender, education, etc.) you see some groups had significant growth (60+, women, higher education) while others lagged behind (25-34, men, less than BA). 
 
 ##### Early 2012 - today
 
+This period has seen substantial growth. From January 2012 to `r tb_final01$date %>% last() %>% format("%B %Y")`, the real median household income grew to `r dollar(p3_ri_2)` representing an annual growth of `r round((((p3_ri_2/p2_ri_2) - 1)/getDif(as.Date("2012-01-01"), tb_final01$date %>% last()) * 100), 2)` pp per year. NEED COMMENTARY ON HOW THIS GROWTH RELATES TO AVERAGE GROWTH IN HOUSING COST. NEED DETAILS ON ECONOMIC CONDITION. 
+
 #### price-to-income ratio
 
-We can use nominal dollars to calculate the price to income ratio. I'll include a linear model to help us understand the trend over time.
+We can use nominal dollars to calculate the price to income ratio. I'll include a linear model to help us understand the trend over time. 
 
 ```{r}
 #| label: fig-price-to-income-ratio
-#| fig-cap: "Price-to-income ratio over time. Monthly forecasts with 3$\\sigma$ prediction interval. Linear model with 3$\\sigma$ confidence interval. Hover over the lines to see the percentile of the observation and ranges for forecasts."
+#| fig-cap: "Ratio of median home price to median household income over time. Monthly forecasts with 3$\\sigma$ prediction interval. Linear model with 3$\\sigma$ confidence interval. Hover over the lines to see the percentile of the observation and ranges for forecasts."
 #| column: body
 #| out-width: "100%"
 
@@ -764,7 +766,7 @@ From `r format(min(pi_data$tb$date), '%B %Y')` to `r format(max(pi_data$tb$date)
 
 ```{r}
 #| label: fig-debt-to-income-ratio
-#| fig-cap: "Debt-to-income ratio over time. Monthly forecasts with 3$\\sigma$ prediction interval. Linear model with 3$\\sigma$ confidence interval. Hover over the lines to see the percentile of the observation and ranges for forecasts."
+#| fig-cap: "Ratio of monthly mortgage to monthly income over time. Monthly forecasts with 3$\\sigma$ prediction interval. Linear model with 3$\\sigma$ confidence interval. Hover over the lines to see the percentile of the observation and ranges for forecasts."
 #| column: body
 #| out-width: "100%"
 
@@ -776,7 +778,7 @@ createForecastPlot(
   y_u_col = "dti_u",
   y_sd_col = "dti_sd",
   title_text = "debt-to-income ratio",
-  y_label_fn = scales::label_percent(accuracy = 1),
+  y_label_fn = scales::label_number(accuracy = 0.01),
   dp = di_data
 )
 ```
